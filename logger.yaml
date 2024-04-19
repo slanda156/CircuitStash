@@ -1,0 +1,19 @@
+version: 1
+formatters:
+  simple:
+    format: "%(levelname)s - %(message)s"
+  complex:
+    format: "%(asctime)s %(name)s:%(levelname)s:%(lineno)d - %(message)s"
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: simple
+  file:
+    class: logging.FileHandler
+    formatter: complex
+    filename: "log.log"
+    mode: a
+root:
+  level: DEBUG
+  handlers: [console, file]
+disable_existing_loggers: false
