@@ -9,10 +9,12 @@ handlers:
     class: logging.StreamHandler
     formatter: simple
   file:
-    class: logging.FileHandler
+    class: logging.handlers.RotatingFileHandler
     formatter: complex
     filename: "log.log"
     mode: a
+    maxBytes: 5000000
+    backupCount: 3
 root:
   level: DEBUG
   handlers: [console, file]
