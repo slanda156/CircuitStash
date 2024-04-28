@@ -8,7 +8,7 @@ def test_connectDb():
     assert db.connect() is True
 
 def test_createComponent():
-    component = Component("Test", description="This is a test component", price=1.0, imagePath="test.png", datasheetPath="test.pdf")
+    component = Component("Test", description="This is a test component", price=1.0)
     assert db.createComponent(component) is True
 
 def test_getComponents():
