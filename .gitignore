@@ -226,7 +226,6 @@ $RECYCLE.BIN/
 .github/
 .vscode/
 *.log.*
-mkdocs.yaml
 pyproject.toml
 TODO
 data/
