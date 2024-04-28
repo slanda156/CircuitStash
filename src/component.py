@@ -1,6 +1,11 @@
 from logging import getLogger
 
+from PIL import Image, ImageOps
+
 from PIL.Image import Image as Img
+
+from .location import Location
+from pathlib import Path
 
 
 logger = getLogger(__name__)
@@ -11,11 +16,25 @@ class Component:
         self.id: int | None = args.get("id")
         self.name = name
         self.description: str = args.get("description", "")
-        self.price = args.get("price", 0.0)
+        self.price: float  = round(float(args.get("price", 0.0)), 2)
         self.image: Img | None = None
-        self.imagePath: str | None = args.get("imagePath")
-        self.datasheetPath: str | None = args.get("datasheetPath")
-        self.locations = []
+        self.imagePath: str | Path | None = args.get("imagePath")
+        self.datasheetPath: str | Path | None = args.get("datasheetPath")
+        self.locations: list[tuple[Location, int]] = []
+
+        if self.imagePath and isinstance(self.imagePath, Path):
+            self.imagePath = str(self.imagePath)
+        if self.datasheetPath and isinstance(self.datasheetPath, Path):
+            self.datasheetPath = str(self.datasheetPath)
+
+        if self.imagePath:
+            try:
+                image = Image.open(self.imagePath)
+                self.image = ImageOps.fit(image, (128, 128))
+            except FileNotFoundError:
+                logger.error(f"Image not found: {self.imagePath}")
+            except Exception as e:
+                logger.error(f"Error opening image: {e}")
 
 
     @property
