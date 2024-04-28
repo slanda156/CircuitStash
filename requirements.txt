@@ -1,12 +1,5 @@
-annotated-types==0.6.0
 customtkinter==5.2.2
-darkdetect==0.8.0
-greenlet==3.0.3
-packaging==24.0
-pillow==10.3.0
-pydantic==2.7.0
-pydantic_core==2.18.1
-PyYAML==6.0.1
-SQLAlchemy==2.0.29
+pillow<11.0.0
+pydantic<3.0.0
+PyYAML<7.0.0
 sqlmodel==0.0.16
-typing_extensions==4.11.0
