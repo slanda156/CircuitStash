@@ -133,7 +133,11 @@ class Database:
                     stmt = select(ComponentLocationMap).where(ComponentLocationMap.componentID == c.id)
                     results = session.exec(stmt).all()
                     for result in results:
-                        c.locations.append((result.locationID, result.amount))
+                        loc = self.getLocation(result.locationID)
+                        if not loc:
+                            logger.warning(f"Location ID: \"{result.locationID}\" not found")
+                            continue
+                        c.locations.append((loc, result.amount))
                 return components
 
         except OperationalError as e:
@@ -161,7 +165,11 @@ class Database:
                 stmt = select(ComponentLocationMap).where(ComponentLocationMap.componentID == component.id)
                 results = session.exec(stmt).all()
                 for result in results:
-                    component.locations.append((result.locationID, result.amount))
+                    loc = self.getLocation(result.locationID)
+                    if not loc:
+                        logger.warning(f"Location ID: \"{result.locationID}\" not found")
+                        continue
+                    component.locations.append((loc, result.amount))
                 return component
 
         except OperationalError as e:
@@ -347,6 +355,28 @@ class Database:
             return CAmap.amount
         else:
             return -1
+
+    def getLocationsIdForComponent(self, componentID: int) -> list[tuple[int, int]]:
+        try:
+            with Session(self.engine) as session:
+                stmt = select(ComponentLocationMap).where(ComponentLocationMap.componentID == componentID)
+                results = session.exec(stmt).all()
+                return [(result.locationID, result.amount) for result in results]
+
+        except OperationalError as e:
+            logger.error("Database error")
+            logger.debug(e)
+            return []
+
+    def getLocationsForComponent(self, componentID: int) -> list[tuple[Location, int]]:
+        data = self.getLocationsIdForComponent(componentID)
+        locations = []
+        for locationID, amount in data:
+            loc = self.getLocation(locationID)
+            if loc:
+                locations.append((loc, amount))
+        return locations
+
 
     def getAllComponentAmount(self, componentID: int) -> int:
         try:
