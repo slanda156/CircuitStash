@@ -1,5 +1,0 @@
-customtkinter==5.2.2
-pillow<11.0.0
-pydantic<3.0.0
-PyYAML<7.0.0
-sqlmodel==0.0.16
