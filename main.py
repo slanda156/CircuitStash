@@ -12,7 +12,6 @@ with open("logger.yaml") as f:
 
 logger = getLogger(__name__)
 
-
 if __name__ == "__main__":
     logger.info("Starting Circuit Stash")
     app = App()
