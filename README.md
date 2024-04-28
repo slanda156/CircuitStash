@@ -20,7 +20,7 @@ I recomend using an virual enviroment.
 Go to the folder and install the dependencies.
 
 ```sh
-python -m virutalenv .venv
+python -m virtualenv .venv
 pip install -r requirements.txt
 ```
 
@@ -32,7 +32,7 @@ python -m pytest
 
 If you want to generate the docs
 ```sh
-pip install mkdocs, mkdocs-material
+pip install mkdocs mkdocs-material
 python -m mkdocs build
 ```
 
