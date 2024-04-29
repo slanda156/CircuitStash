@@ -12,6 +12,20 @@ logger = getLogger(__name__)
 
 
 class Component:
+    """
+    Represents a component in the CircuitStash application.
+
+    Attributes:
+        id (int | None): The ID of the component.
+        name (str): The name of the component.
+        description (str): The description of the component.
+        price (float): The price of the component.
+        image (Img | None): The image of the component.
+        imagePath (str | Path | None): The path to the image file of the component.
+        datasheetPath (str | Path | None): The path to the datasheet file of the component.
+        locations (list[tuple[Location, int]]): The list of locations where the component is available.
+    """
+
     def __init__(self, name: str, **args) -> None:
         self.id: int | None = args.get("id")
         self.name = name
@@ -39,6 +53,12 @@ class Component:
 
     @property
     def toDB(self) -> dict:
+        """
+        Returns a dictionary representation of the component for database storage.
+
+        Returns:
+            dict: A dictionary containing the component's attributes.
+        """
         return {
             "name": self.name,
             "description": self.description,
