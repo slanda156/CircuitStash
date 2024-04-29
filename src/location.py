@@ -5,18 +5,18 @@ logger = getLogger(__name__)
 
 
 class Location:
-    def __init__(self, name: str, **args) -> None:
-        """
-        Initialize a Location object.
+    """
+    Represents a location in the system.
 
-        Args:
-            name (str): The name of the location.
-            **args: Additional keyword arguments.
-                id (int, optional): The ID of the location. Defaults to None.
-                parentID (int, optional): The ID of the parent location. Defaults to -1.
-                shortName (str, optional): The short name of the location. Defaults to an empty string.
-                description (str, optional): The description of the location. Defaults to an empty string.
-        """
+    Attributes:
+        name (str): The name of the location.
+        id (int | None): The ID of the location.
+        parentID (int): The ID of the parent location.
+        shortName (str): The short name of the location.
+        description (str): The description of the location.
+    """
+
+    def __init__(self, name: str, **args) -> None:
         self.id: int | None = args.get("id")
         self.parentID: int = args.get("parentID", -1)
         self.name = name
