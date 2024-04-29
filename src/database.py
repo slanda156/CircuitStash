@@ -61,9 +61,12 @@ class Locations(SQLModel, table=True):
 
 
 class Database:
-    def __init__(self) -> None:
+    def __init__(self, db: str | None = None) -> None:
         self.echo = True if logger.level == 10 else False
-        self.engineUrl = "sqlite:///data/database.db"
+        if db:
+            self.engineUrl = db
+        else:
+            self.engineUrl = "sqlite:///data/database.db"
 
     def connect(self) -> bool:
         try:
@@ -96,7 +99,7 @@ class Database:
             logger.debug(e)
             return False
 
-    def deleteComponent(self, component: Component, delMap: bool=False) -> bool:
+    def deleteComponent(self, component: Component, force: bool=False) -> bool:
         try:
             with Session(self.engine) as session:
                 stmt = select(Components).where(Components.id == component.id)
@@ -106,7 +109,7 @@ class Database:
                     return False
 
                 results = session.exec(select(ComponentLocationMap).where(ComponentLocationMap.componentID == component.id)).all()
-                if delMap:
+                if force:
                     for result in results:
                         session.delete(result)
                 elif results:
@@ -204,7 +207,7 @@ class Database:
             logger.debug(e)
             return False
 
-    def deleteLocation(self, location: Location, delMap: bool=False) -> bool:
+    def deleteLocation(self, location: Location, force: bool=False) -> bool:
         try:
             with Session(self.engine) as session:
                 stmt = select(Locations).where(Locations.id == location.id)
@@ -214,7 +217,7 @@ class Database:
                     return False
 
                 results = session.exec(select(ComponentLocationMap).where(ComponentLocationMap.locationID == location.id)).all()
-                if delMap:
+                if force:
                     for result in results:
                         session.delete(result)
                 elif results:
