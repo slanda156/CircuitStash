@@ -337,16 +337,26 @@ class Database:
             logger.debug(e)
             return False
 
-    def getComponentLocationMap(self, componentID: int, locationID: int) -> ComponentLocationMap | None:
+    def getComponentLocationMap(self, componentID: int=-1, locationID: int=-1, clmId: int=-1) -> ComponentLocationMap | None:
         try:
-            with Session(self.engine) as session:
-                stmt = select(ComponentLocationMap).where(ComponentLocationMap.componentID == componentID, ComponentLocationMap.locationID == locationID)
-                result = session.exec(stmt).first()
-                if not result:
-                    logger.warning(f"Component \"{componentID}\" not found in location \"{locationID}\"")
-                    return
-
-                return ComponentLocationMap(**result.toDict())
+            if clmId > -1:
+                with Session(self.engine) as session:
+                    stmt = select(ComponentLocationMap).where(ComponentLocationMap.id == clmId)
+                    result = session.exec(stmt).first()
+                    if not result:
+                        logger.warning(f"ComponentLocationMap ID: \"{clmId}\" not found")
+                        return
+                    return ComponentLocationMap(**result.toDict())
+            elif componentID > -1 and locationID > -1:
+                with Session(self.engine) as session:
+                    stmt = select(ComponentLocationMap).where(ComponentLocationMap.componentID == componentID, ComponentLocationMap.locationID == locationID)
+                    result = session.exec(stmt).first()
+                    if not result:
+                        logger.warning(f"Component \"{componentID}\" not found in location \"{locationID}\"")
+                        return
+                    return ComponentLocationMap(**result.toDict())
+            else:
+                raise ValueError("No ID provided")
 
         except OperationalError as e:
             logger.error("Database error")
