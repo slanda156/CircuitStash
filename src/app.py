@@ -31,9 +31,38 @@ class App(ctk.CTk):
 
         self.db = Database()
         self.db.connect()
-
-        #self.createWidgets()
-
+        self.popup: ctk.CTkToplevel | None = None
 
     def createWidgets(self) -> None:
-        widgets.TreeView()
+    def createPopup(self, type: str, id: int=-1) -> None:
+        if self.popup:
+            logger.warning("Popup already exists")
+            self.destroyPopup()
+        if type == "acl":
+            self.popup = widgets.AddComponentLocation(self.db, self)
+        elif type == "ac":
+            self.popup = widgets.AddComponent(self.db, self)
+        elif type == "al":
+            self.popup = widgets.AddLocation(self.db, self)
+        elif type == "ccl":
+            self.popup = widgets.ChangeComponentLocation(id, self.db, self)
+        elif type == "cc":
+            self.popup = widgets.ChangeComponent(id, self.db, self)
+        elif type == "cl":
+            self.popup = widgets.ChangeLocation(id, self.db, self)
+        else:
+            logger.error(f"Unknown popup type: {type}")
+            return
+        self.popup.destroyFunc = self.destroyPopup
+        self.popup.protocol("WM_DELETE_WINDOW", self.destroyPopup)
+        self.popup.transient(self)
+        self.popup.wait_visibility()
+        self.popup.grab_set()
+        self.popup.wait_window()
+
+    def destroyPopup(self) -> None:
+        if self.popup:
+            logger.debug(f"Destroying popup, \"{self.popup.title()}\"")
+            self.popup.grab_release()
+            self.popup.destroy()
+            self.popup = None
