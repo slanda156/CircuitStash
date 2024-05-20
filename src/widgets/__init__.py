@@ -6,3 +6,5 @@ from .popups import AddLocation  # noqa: F401
 from .popups import ChangeComponentLocation  # noqa: F401
 from .popups import ChangeComponent  # noqa: F401
 from .popups import ChangeLocation  # noqa: F401
+from .componentList import ComponentList  # noqa: F401
+from .locationList import LocationList  # noqa: F401

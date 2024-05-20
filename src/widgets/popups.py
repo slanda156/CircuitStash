@@ -396,3 +396,31 @@ class ChangeComponentLocation(Popup):
         logger.debug(f"Changing component amount in location, \"{self.component.name}\" in \"{self.location.name}\", amount: {amount}")
         self.destroyFunc()
 
+class ChangeComponent(Popup):
+    def __init__(self, component: Component | int, *args, **kargs) -> None:
+        super().__init__("Change Component", *args, **kargs)
+        if isinstance (component, int):
+            self.component = self.db.getComponent(component)
+        else:
+            self.component = component
+        if self.component is None:
+            logger.error("Invalid component")
+            self.destroyFunc()
+
+    def createWidgets(self) -> None:
+        pass
+
+
+class ChangeLocation(Popup):
+    def __init__(self, location: Location | int, db: Database, *args, **kargs) -> None:
+        super().__init__("Change Location", db, *args, **kargs)
+        if isinstance(location, int):
+            self.location = self.db.getLocation(location)
+        else:
+            self.location = location
+        if self.location is None:
+            logger.error("Invalid location")
+            self.destroyFunc()
+
+    def createWidgets(self) -> None:
+        pass
