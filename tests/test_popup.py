@@ -1,5 +1,4 @@
 from string import punctuation
-import os
 
 import customtkinter as ctk
 
@@ -10,9 +9,6 @@ class Master(ctk.CTk):
     def __init__(self):
         self.db = Database()
 
-
-if os.environ.get("DISPLAY", "") == "":
-    os.environ.__setitem__("DISPLAY", ":0.0")
 
 master = Master()
 popup = Popup("Test", master.db, master=master)
