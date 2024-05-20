@@ -52,7 +52,7 @@ python -m mkdocs build
 
 Christoph Heil – slandalp@gmail.com
 
-Distributed under the XYZ license. See ``LICENSE`` for more information.
+Distributed under the MIT license. See [``License``](LICENSE) for more information.
 
 [https://github.com/slanda156/CircuitStash](https://github.com/slanda156/CircuitStash)
 
