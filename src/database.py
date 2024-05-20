@@ -369,6 +369,23 @@ class Database:
         else:
             return -1
 
+    def getComponentsInLocation(self, locationID: int) -> list[Component]:
+        try:
+            with Session(self.engine) as session:
+                stmt = select(ComponentLocationMap).where(ComponentLocationMap.locationID == locationID)
+                results = session.exec(stmt).all()
+                components: list[Component] = []
+                for result in results:
+                    component = self.getComponent(result.componentID)
+                    if component:
+                        components.append(component)
+                return components
+
+        except OperationalError as e:
+            logger.error("Database error")
+            logger.debug(e)
+            return []
+
     def getLocationsIdForComponent(self, componentID: int) -> list[tuple[int, int]]:
         try:
             with Session(self.engine) as session:
