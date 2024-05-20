@@ -11,11 +11,12 @@ class Master(ctk.CTk):
         self.db = Database()
 
 
-popup = Popup("Test", master=Master())
+master = Master()
+popup = Popup("Test", master.db, master=master)
 
 
 def test_popup():
-    popup = Popup("Test", master=Master())
+    popup = Popup("Test", master.db, master=master)
     assert popup.master is not None
     assert popup.db is not None
 
