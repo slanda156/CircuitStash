@@ -2,7 +2,8 @@
 > An Open Source part storage manager
 
 I wanted a free storage manager for my electronics parts, that stores all information localy.
-This is curently a python program runing and saving localy.
+This is curently a python program runing and saving localy in a sqlite file.
+You can create a part with an image and crate a location to store diffrent parts.
 
 
 ## Installation
@@ -21,6 +22,7 @@ Go to the folder and install the dependencies.
 
 ```sh
 python -m virtualenv .venv
+.venv\Scripts\activate.bat
 pip install -r requirements.txt
 ```
 
