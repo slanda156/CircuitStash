@@ -37,6 +37,8 @@ class App(ctk.CTk):
         self.db.connect()
         # Load Icons for window
         self.icons = self.loadIcons(self.preMadePath.glob("*.ico"))
+        self.windowIcon = str(list(self.preMadePath.glob("window.ico"))[0])
+        self.iconbitmap(self.windowIcon)
         # Define variables
         self.selected: Component | Location | None = None
         self.selectedWidget: ctk.CTkFrame | None = None
