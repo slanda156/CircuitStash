@@ -9,7 +9,7 @@ You can create a part with an image and crate a location to store diffrent parts
 ## Installation
 
 Windows:
->Just start the CircuitStash.exe
+    Download the latest release and start the .exe
 
 ## Development setup
 
