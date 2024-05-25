@@ -474,6 +474,8 @@ class ChangeComponent(Popup):
         self.cancelButton.grid(row=4, column=0)
         self.changeButton = CTk.CTkButton(self, text="Change", command=self.change)
         self.changeButton.grid(row=4, column=1)
+        self.removeButton = CTk.CTkButton(self, text="Remove", command=self.remove)
+        self.removeButton.grid(row=4, column=2)
 
     def change(self, *args) -> None:
         name = self.nameEntry.get()
@@ -487,6 +489,32 @@ class ChangeComponent(Popup):
             logger.error("Failed to update component")
             tkMessageBox.showerror("Error", "Failed to update component")
             return
+        self.destroyFunc()
+
+    def remove(self, *args) -> None:
+        if not tkMessageBox.askokcancel("Remove Component", "Are you sure you want to remove this component?", parent=self):
+            logger.info("User canceled component removal")
+            self.destroyFunc()
+            return
+        componentId = self.component.id
+        if componentId is None:
+            logger.error("Invalid component id")
+            tkMessageBox.showerror("Error", "Invalid component id")
+            self.destroyFunc()
+            return
+        locations = self.db.getLocationsForComponent(componentId)
+        if len(locations) > 0:
+            logger.warning("Component has locations")
+            if not tkMessageBox.askquestion("Remove Component", "Component has locations, are you sure you want to remove this component?", parent=self):
+                logger.info("User canceled component removal after active location warning")
+                return
+            if not self.db.deleteComponent(self.component, True):
+                logger.error("Failed to force delete component")
+                tkMessageBox.showerror("Error", "Failed to force delete component")
+        else:
+            if not self.db.deleteComponent(self.component):
+                logger.error("Failed to delete component")
+                tkMessageBox.showerror("Error", "Failed to delete component")
         self.destroyFunc()
 
 
@@ -540,6 +568,8 @@ class ChangeLocation(Popup):
         self.cancelButton.grid(row=5, column=0)
         self.changeButton = CTk.CTkButton(self, text="Change", command=self.change)
         self.changeButton.grid(row=5, column=1)
+        self.removeButton = CTk.CTkButton(self, text="Remove", command=self.remove)
+        self.removeButton.grid(row=5, column=2)
 
     def change(self, *args) -> None:
         self.location.name = self.nameEntry.get()
@@ -559,4 +589,29 @@ class ChangeLocation(Popup):
             logger.error("Failed to update location")
             tkMessageBox.showerror("Error", "Failed to update location")
             return
+        self.destroyFunc()
+
+    def remove(self, *args) -> None:
+        if not tkMessageBox.askokcancel("Remove Location", "Are you sure you want to remove this location?", parent=self):
+            logger.info("User canceled location removal")
+            self.destroyFunc()
+            return
+        locationId = self.location.id
+        if locationId is None:
+            logger.error("Invalid location id")
+            tkMessageBox.showerror("Error", "Invalid location id")
+            self.destroyFunc()
+            return
+        components = self.db.getComponentsInLocation(locationId)
+        if len(components) > 0:
+            logger.warning("Location has components")
+            if not tkMessageBox.askokcancel("Remove Location", "Location has components, are you sure you want to remove this location?", parent=self):
+                logger.info("User canceled location removal after active component warning")
+            if not self.db.deleteLocation(self.location, True):
+                logger.error("Failed to force delete location")
+                tkMessageBox.showerror("Error", "Failed to force delete location")
+        else:
+            if not self.db.deleteLocation(self.location):
+                logger.error("Failed to delete location")
+                tkMessageBox.showerror("Error", "Failed to delete location")
         self.destroyFunc()
