@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from logging import getLogger
 
 import customtkinter as ctk
@@ -5,7 +6,8 @@ import customtkinter as ctk
 from src.component import Component
 from src.widgets import ChangeComponent
 
-from src.database import Database
+if TYPE_CHECKING:
+    from src.app import App
 
 
 logger = getLogger(__name__)
@@ -28,7 +30,7 @@ class ComponentToSort(Component):
 
 
 class ComponentWidget(ctk.CTkFrame):
-    def __init__(self, parent: ctk.CTkScrollableFrame, component: ComponentToSort, icons: dict[str, ctk.CTkImage], db: Database) -> None:
+    def __init__(self, parent: ctk.CTkScrollableFrame, component: ComponentToSort, icons: dict[str, ctk.CTkImage], master) -> None:
         super().__init__(parent)
         self.component = component
         self.icons = icons
@@ -36,7 +38,8 @@ class ComponentWidget(ctk.CTkFrame):
             self.image = ctk.CTkImage(self.component.image, size=(64, 64))
         else:
             self.image = None
-        self.db = db
+        self.master: App = master
+        self.db = self.master.db
         self.popup: ChangeComponent | None = None
         self.createWidgets()
 
@@ -68,13 +71,26 @@ class ComponentWidget(ctk.CTkFrame):
     def change(self) -> None:
         logger.info(f"Changing component {self.component.name}")
         self.popup = ChangeComponent(self.component, self.db, self)
+        self.popup.destroyFunc = self.destroyPopup
+        self.popup.protocol("WM_DELETE_WINDOW", self.destroyPopup)
+        self.popup.transient(self.master)
+        self.popup.wait_visibility()
+        self.popup.grab_set()
+        self.popup.wait_window()
+
+    def destroyPopup(self) -> None:
+        if self.popup:
+            logger.debug(f"Destroying popup, \"{self.popup.title()}\"")
+            self.popup.grab_release()
+            self.popup.destroy()
+            self.popup = None
 
 
 class ComponentList(ctk.CTkScrollableFrame):
-    def __init__(self, parent: ctk.CTkBaseClass, icons: dict[str, ctk.CTkImage], components: list[Component], db: Database, sorting: str, search: str="") -> None:
+    def __init__(self, parent: ctk.CTkBaseClass, icons: dict[str, ctk.CTkImage], components: list[Component], master, sorting: str, search: str="") -> None:
         super().__init__(parent)
         self.icons = icons
-        self.db = db
+        self.master: App = master
         self.sortedComponent: list[ComponentToSort] = []
         self.componentWidgets: list[ComponentWidget] = []
         self.refresh(components, sorting, search)
@@ -136,6 +152,6 @@ class ComponentList(ctk.CTkScrollableFrame):
         self.descriptionLabel = ctk.CTkLabel(self, text="Description")
         self.descriptionLabel.grid(row=0, column=5, **args)
         for row, component in enumerate(self.sortedComponent):
-            widget = ComponentWidget(self, component, self.icons, self.db)
+            widget = ComponentWidget(self, component, self.icons, self.master)
             widget.grid(row=row+1, sticky="nw", columnspan=6, pady=5)
             self.componentWidgets.append(widget)

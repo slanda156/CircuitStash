@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from logging import getLogger
 
 import customtkinter as ctk
@@ -5,7 +6,8 @@ import customtkinter as ctk
 from src.location import Location
 from src.widgets import ChangeLocation
 
-from src.database import Database
+if TYPE_CHECKING:
+    from src.app import App
 from src.component import Component
 
 logger = getLogger(__name__)
@@ -25,11 +27,12 @@ class LocationToSort(Location):
 
 
 class LocationWidget(ctk.CTkFrame):
-    def __init__(self, parent: ctk.CTkScrollableFrame, location: LocationToSort, icons: dict[str, ctk.CTkImage], db: Database) -> None:
+    def __init__(self, parent: ctk.CTkScrollableFrame, location: LocationToSort, icons: dict[str, ctk.CTkImage], master) -> None:
         super().__init__(parent)
         self.location = location
         self.icons = icons
-        self.db = db
+        self.master: App = master
+        self.db = master.db
         self.popup: ChangeLocation | None = None
         self.createWidgets()
 
@@ -58,13 +61,26 @@ class LocationWidget(ctk.CTkFrame):
     def change(self) -> None:
         logger.info(f"Changing location {self.location.name}")
         self.popup = ChangeLocation(self.location, self.db, self)
+        self.popup.destroyFunc = self.destroyPopup
+        self.popup.protocol("WM_DELETE_WINDOW", self.destroyPopup)
+        self.popup.transient(self.master)
+        self.popup.wait_visibility()
+        self.popup.grab_set()
+        self.popup.wait_window()
+
+    def destroyPopup(self) -> None:
+        if self.popup:
+            logger.debug(f"Destroying popup, \"{self.popup.title()}\"")
+            self.popup.grab_release()
+            self.popup.destroy()
+            self.popup = None
 
 
 class LocationList(ctk.CTkScrollableFrame):
-    def __init__(self, parent: ctk.CTkBaseClass, icons: dict[str, ctk.CTkImage], locations: list[Location], db: Database, sorting: str, search: str="") -> None:
+    def __init__(self, parent: ctk.CTkBaseClass, icons: dict[str, ctk.CTkImage], locations: list[Location], master, sorting: str, search: str="") -> None:
         super().__init__(parent)
         self.icons = icons
-        self.db = db
+        self.master: App = master
         self.sortedComponent: list[LocationToSort] = []
         self.locationWidgets: list[LocationWidget] = []
         self.refresh(locations, sorting, search)
@@ -73,7 +89,7 @@ class LocationList(ctk.CTkScrollableFrame):
         self.locations: list[LocationToSort] = []
         for location in locations:
             if location.id is not None:
-                self.locations.append(LocationToSort(location, self.db.getComponentsInLocation(location.id)))
+                self.locations.append(LocationToSort(location, self.master.db.getComponentsInLocation(location.id)))
             else:
                 self.locations.append(LocationToSort(location, []))
         self.sorting = sorting
@@ -128,6 +144,6 @@ class LocationList(ctk.CTkScrollableFrame):
         self.descriptionLabel = ctk.CTkLabel(self, text="Description")
         self.descriptionLabel.grid(row=0, column=4, **args)
         for row, location in enumerate(self.sortedLocations):
-            widget = LocationWidget(self, location, self.icons, self.db)
+            widget = LocationWidget(self, location, self.icons, self.master)
             widget.grid(row=row+1, sticky="nw", columnspan=5, pady=5)
             self.locationWidgets.append(widget)
