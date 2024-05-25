@@ -2,6 +2,7 @@ from logging import getLogger
 from pathlib import Path
 
 import customtkinter as CTk
+import tkinter.messagebox as tkMessageBox
 import tkinter.filedialog as tkfd
 from PIL import Image
 
@@ -26,7 +27,7 @@ class Popup(CTk.CTkToplevel):
         pass
 
     def _destroy(self) -> None:
-        raise ValueError("This method must be overridden")
+        raise NotImplementedError("This method must be overridden")
 
     def getFloatFromStr(self, s: str) -> float | None:
         s = s.replace("€", "").replace(",", ".").strip()
@@ -68,6 +69,64 @@ class Popup(CTk.CTkToplevel):
             logger.debug("Invalid string input")
             return
         return int(s)
+
+    def addCurrency(self, *args) -> None:
+        event = args[0]
+        try:
+            widget: CTk.CTkEntry = event.widget
+            if widget.widgetName != "entry":
+                logger.error("Invalid widget")
+                return
+        except Exception as e:
+            logger.error("Invalid widget")
+            logger.debug(e)
+            return
+        price = self.getFloatFromStr(widget.get())
+        if price is None:
+            logger.warning("Invalid price input")
+            widget.delete(0, "end")
+            return
+        widget.delete(0, "end")
+        widget.insert(0, f"{price:.2f} €")
+
+    def createImageDialog(self, master) -> None:
+        master.imageDialog = tkfd.askopenfiles(mode="r", filetypes=[("Image Files", "*.png *.jpg *.jpeg *.bmp")], title="Select Image", initialdir=".")
+        try:
+            imgPath = Path(master.imageDialog[0].name)
+        except Exception as e:
+            logger.warning("No image selected")
+            logger.debug(e)
+            return
+        image = Image.open(imgPath)
+        # Check if its a premade image
+        if len(list(master.master.preMadePath.glob(imgPath.name))) == 0:  # type: ignore
+            master.imagePath = master.master.imgPath / imgPath.name  # type: ignore
+            # Check if the image is allready in the image folder
+            if Path(imgPath) != master.imagePath:
+                image.save(master.imagePath)
+        ctkImage = CTk.CTkImage(image, size=(100, 100))
+        master.image = CTk.CTkLabel(master, text="", image=ctkImage)
+        master.image.grid(row=4, column=2, sticky="ne")
+        master.imageEntry.delete(0, "end")
+        master.imageEntry.insert("end", imgPath)
+
+    def createDatasheetDialog(self, master) -> None:
+        master.datasheetDialog = tkfd.askopenfiles(mode="r", filetypes=[("PDF Files", "*.pdf")], title="Select Datasheet", initialdir=".")
+        try:
+            name = master.datasheetDialog[0].name
+        except Exception as e:
+            logger.warning("No datasheet selected")
+            logger.debug(e)
+            return
+        with open(name, "rb") as f:
+            doc = f.readlines()
+        master.datasheetPath = master.master.docsPath / Path(name).name  # type: ignore
+        if isinstance(master.datasheetPath, Path) and master.datasheetPath.exists():
+            with open(master.datasheetPath, "wb") as f:
+                f.writelines(doc)
+        master.datasheetEntry.delete(0, "end")
+        master.datasheetEntry.insert("end", name)
+
 
 class AddComponentLocation(Popup):
     def __init__(self, db: Database, *args, **kargs) -> None:
@@ -164,13 +223,13 @@ class AddComponent(Popup):
         self.imageLabel.grid(row=2, column=0, sticky="e")
         self.imageEntry = CTk.CTkEntry(self, width=300)
         self.imageEntry.grid(row=2, column=1)
-        self.imageButton = CTk.CTkButton(self, text="Select Image", command=self.createImageDialog)
+        self.imageButton = CTk.CTkButton(self, text="Select Image", command=lambda: self.createImageDialog(self))
         self.imageButton.grid(row=2, column=2)
         self.datasheetLabel = CTk.CTkLabel(self, text="Datasheet: ")
         self.datasheetLabel.grid(row=3, column=0, sticky="e")
         self.datasheetEntry = CTk.CTkEntry(self, width=300)
         self.datasheetEntry.grid(row=3, column=1)
-        self.datasheetButton = CTk.CTkButton(self, text="Select Datasheet", command=self.createDatasheetDialog)
+        self.datasheetButton = CTk.CTkButton(self, text="Select Datasheet", command=lambda: self.createImageDialog(self))
         self.datasheetButton.grid(row=3, column=2)
         self.descriptionLabel = CTk.CTkLabel(self, text="Description: ")
         self.descriptionLabel.grid(row=4, column=0, sticky="ne")
@@ -180,43 +239,6 @@ class AddComponent(Popup):
         self.cancelButton.grid(row=5, column=0)
         self.addButton = CTk.CTkButton(self, text="Add", command=self.add)
         self.addButton.grid(row=5, column=1)
-
-    def createImageDialog(self) -> None:
-        self.imageDialog = tkfd.askopenfiles(mode="r", filetypes=[("Image Files", "*.png *.jpg *.jpeg *.bmp")], title="Select Image", initialdir=".")
-        try:
-            imgPath = Path(self.imageDialog[0].name)
-        except Exception as e:
-            logger.warning("No image selected")
-            logger.debug(e)
-            return
-        image = Image.open(imgPath)
-        # Check if its a premade image
-        if len(list(self.master.preMadePath.glob(imgPath.name))) == 0:  # type: ignore
-            self.imagePath = self.master.imgPath / imgPath.name  # type: ignore
-            # Check if the image is allready in the image folder
-            if Path(imgPath) != self.imagePath:
-                image.save(self.imagePath)
-        ctkImage = CTk.CTkImage(image, size=(100, 100))
-        self.image = CTk.CTkLabel(self, text="", image=ctkImage)
-        self.image.grid(row=4, column=2, sticky="ne")
-        self.imageEntry.delete(0, "end")
-        self.imageEntry.insert("end", imgPath)
-
-    def createDatasheetDialog(self) -> None:
-        self.datasheetDialog = tkfd.askopenfiles(mode="r", filetypes=[("PDF Files", "*.pdf")], title="Select Datasheet", initialdir=".")
-        try:
-            name = self.datasheetDialog[0].name
-        except Exception as e:
-            logger.warning("No datasheet selected")
-            logger.debug(e)
-            return
-        with open(name, "rb") as f:
-            doc = f.readlines()
-        self.datasheetPath = self.master.docsPath / Path(name).name  # type: ignore
-        with open(self.datasheetPath, "wb") as f:
-            f.writelines(doc)
-        self.datasheetEntry.delete(0, "end")
-        self.datasheetEntry.insert("end", name)
 
     def add(self, *args) -> None:
         if self.nameEntry.get() == "":
@@ -236,25 +258,6 @@ class AddComponent(Popup):
             return
         logger.debug(f"Adding component, \"{component.name}\"")
         self.destroyFunc()
-
-    def addCurrency(self, *args) -> None:
-        event = args[0]
-        try:
-            widget: CTk.CTkEntry = event.widget
-            if widget.widgetName != "entry":
-                logger.error("Invalid widget")
-                return
-        except Exception as e:
-            logger.error("Invalid widget")
-            logger.debug(e)
-            return
-        price = self.getFloatFromStr(widget.get())
-        if price is None:
-            logger.warning("Invalid price input")
-            widget.delete(0, "end")
-            return
-        widget.delete(0, "end")
-        widget.insert(0, f"{price:.2f} €")
 
 
 class AddLocation(Popup):
@@ -328,11 +331,18 @@ class ChangeComponentLocation(Popup):
         componentId = clm["componentID"]
         locationId = clm["locationID"]
         self.amount = clm["amount"]
-        self.component = self.db.getComponent(componentId)
-        if self.component is None:
+        comp = self.db.getComponent(componentId)
+        if comp is None:
             logger.error("Invalid component id")
             self.destroyFunc()
-        self.location = self.db.getLocation(locationId)
+            return
+        self.component: Component = comp
+        loc = self.db.getLocation(locationId)
+        if loc is None:
+            logger.error("Invalid location id")
+            self.destroyFunc()
+            return
+        self.location: Location = loc
         if self.location is None:
             logger.error("Invalid location id")
             self.destroyFunc()
@@ -369,6 +379,9 @@ class ChangeComponentLocation(Popup):
         self.changeButton.grid(row=4, column=2)
 
     def delete(self, *args) -> None:
+        if self.component.id is None or self.location.id is None:
+            logger.error("Invalid id")
+            return
         currentAmount = self.db.getComponentAmountInLocation(self.component.id, self.location.id)
         if not currentAmount:
             logger.error("Failed to get current amount")
@@ -380,6 +393,9 @@ class ChangeComponentLocation(Popup):
         self.destroyFunc()
 
     def change(self, *args) -> None:
+        if self.component.id is None or self.location.id is None:
+            logger.error("Invalid id")
+            return
         amount = self.getIntFromStr(self.changeAmountEntry.get())
         if not amount or amount == 0:
             logger.warning("Invalid amount (0)")
@@ -398,29 +414,148 @@ class ChangeComponentLocation(Popup):
 
 class ChangeComponent(Popup):
     def __init__(self, component: Component | int, *args, **kargs) -> None:
-        super().__init__("Change Component", *args, **kargs)
         if isinstance (component, int):
-            self.component = self.db.getComponent(component)
+            comp = self.db.getComponent(component)
+            if comp is None:
+                logger.error("Invalid component")
+                self.destroyFunc()
+            else:
+                self.component = comp
         else:
             self.component = component
         if self.component is None:
             logger.error("Invalid component")
             self.destroyFunc()
+        super().__init__("Change Component", *args, **kargs)
 
     def createWidgets(self) -> None:
-        pass
+        self.idLabel = CTk.CTkLabel(self, text="ID: ")
+        self.idLabel.grid(row=0, column=0, sticky="e")
+        self.idEntry = CTk.CTkEntry(self)
+        self.idEntry.insert("end", self.component.id)
+        self.idEntry.configure(state="disabled")
+        self.idEntry.grid(row=0, column=1, sticky="w")
+        self.nameLabel = CTk.CTkLabel(self, text="Name: ")
+        self.nameLabel.grid(row=1, column=0, sticky="e")
+        self.nameEntry = CTk.CTkEntry(self, width=160)
+        self.nameEntry.insert("end", self.component.name)
+        self.nameEntry.grid(row=1, column=1, sticky="w")
+        self.priceLabel = CTk.CTkLabel(self, text="Price: ")
+        self.priceLabel.grid(row=2, column=0, sticky="e")
+        self.priceEntry = CTk.CTkEntry(self, width=70, placeholder_text=" €")
+        self.priceEntry.insert("end", f"{self.component.price:.2f}")
+        self.priceEntry.bind("<FocusOut>", self.addCurrency)
+        self.priceEntry.grid(row=2, column=1, sticky="w")
+        self.descriptionLabel = CTk.CTkLabel(self, text="Description: ")
+        self.descriptionLabel.grid(row=3, column=0, sticky="ne")
+        self.descriptionTextbox = CTk.CTkTextbox(self, width=250, height=160)
+        self.descriptionTextbox.insert("end", self.component.description)
+        self.descriptionTextbox.grid(row=3, column=1, sticky="w")
+        self.imageLabel = CTk.CTkLabel(self, text="Image: ")
+        self.imageLabel.grid(row=0, column=2, sticky="e")
+        self.imageEntry = CTk.CTkEntry(self, width=300)
+        self.imageEntry.insert("end", str(self.component.imagePath))
+        self.imageEntry.grid(row=0, column=3)
+        self.imageButton = CTk.CTkButton(self, text="Select Image", command=lambda: self.createImageDialog(self))
+        self.imageButton.grid(row=0, column=4)
+        image = Image.open(self.component.imagePath)
+        ctkImage = CTk.CTkImage(image, size=(100, 100))
+        self.image = CTk.CTkLabel(self, text="", image=ctkImage)
+        self.image.grid(row=1, column=2, sticky="ne", rowspan=2)
+        self.datasheetLabel = CTk.CTkLabel(self, text="Datasheet: ")
+        self.datasheetLabel.grid(row=3, column=2, sticky="e")
+        self.datasheetEntry = CTk.CTkEntry(self, width=300)
+        self.datasheetEntry.insert("end", str(self.component.datasheetPath))
+        self.datasheetEntry.grid(row=3, column=3)
+        self.datasheetButton = CTk.CTkButton(self, text="Select Datasheet", command=lambda: self.createDatasheetDialog(self))
+        self.datasheetButton.grid(row=3, column=4)
+        self.cancelButton = CTk.CTkButton(self, text="Cancel", command=lambda: self.destroyFunc())
+        self.cancelButton.grid(row=4, column=0)
+        self.changeButton = CTk.CTkButton(self, text="Change", command=self.change)
+        self.changeButton.grid(row=4, column=1)
+
+    def change(self, *args) -> None:
+        name = self.nameEntry.get()
+        description = self.descriptionTextbox.get("1.0", "end")
+        price = self.getFloatFromStr(self.priceEntry.get())
+        if price is None:
+            price = 0.0
+        component = Component(name, description=description, price=price, imagePath=self.imageEntry.get(), datasheetPath=self.datasheetEntry.get())
+        component.id = self.component.id
+        if not self.db.updateComponent(component):
+            logger.error("Failed to update component")
+            tkMessageBox.showerror("Error", "Failed to update component")
+            return
+        self.destroyFunc()
 
 
 class ChangeLocation(Popup):
     def __init__(self, location: Location | int, db: Database, *args, **kargs) -> None:
-        super().__init__("Change Location", db, *args, **kargs)
+        self.location: Location
         if isinstance(location, int):
-            self.location = self.db.getLocation(location)
+            loc = self.db.getLocation(location)
+            if loc is None:
+                logger.error("Invalid location")
+                self.destroyFunc()
+            else:
+                self.location = loc
         else:
             self.location = location
-        if self.location is None:
+        if not self.location:
             logger.error("Invalid location")
             self.destroyFunc()
+        super().__init__("Change Location", db, *args, **kargs)
 
     def createWidgets(self) -> None:
-        pass
+        self.idLabel = CTk.CTkLabel(self, text="ID: ")
+        self.idLabel.grid(row=0, column=0, sticky="e")
+        self.idEntry = CTk.CTkEntry(self)
+        self.idEntry.insert("end", str(self.location.id))
+        self.idEntry.configure(state="disabled")
+        self.idEntry.grid(row=0, column=1, sticky="w")
+        self.parentLabel = CTk.CTkLabel(self, text="Parent ID: ")
+        self.parentLabel.grid(row=1, column=0, sticky="e")
+        self.parentValues = [f"[{location.id}] {location.shortName}" for location in self.db.getLocations()]
+        self.parentValues.insert(0, "None")
+        self.parentVar = CTk.StringVar(self, "None")
+        self.parentOptionMenu = CTk.CTkOptionMenu(self, variable=self.parentVar, values=self.parentValues)
+        self.parentOptionMenu.grid(row=2, column=1, sticky="w")
+        self.nameLabel = CTk.CTkLabel(self, text="Name: ")
+        self.nameLabel.grid(row=2, column=0, sticky="e")
+        self.nameEntry = CTk.CTkEntry(self, width=160)
+        self.nameEntry.insert("end", self.location.name)
+        self.nameEntry.grid(row=2, column=1, sticky="w")
+        self.shortNameLabel = CTk.CTkLabel(self, text="Short Name: ")
+        self.shortNameLabel.grid(row=3, column=0, sticky="e")
+        self.shortNameEntry = CTk.CTkEntry(self, width=50)
+        self.shortNameEntry.insert("end", self.location.shortName)
+        self.shortNameEntry.grid(row=3, column=1, sticky="w")
+        self.descriptionLabel = CTk.CTkLabel(self, text="Description: ")
+        self.descriptionLabel.grid(row=4, column=0, sticky="ne")
+        self.descriptionTextbox = CTk.CTkTextbox(self, width=250, height=160)
+        self.descriptionTextbox.insert("end", self.location.description)
+        self.descriptionTextbox.grid(row=4, column=1, sticky="w")
+        self.cancelButton = CTk.CTkButton(self, text="Cancel", command=lambda: self.destroyFunc())
+        self.cancelButton.grid(row=5, column=0)
+        self.changeButton = CTk.CTkButton(self, text="Change", command=self.change)
+        self.changeButton.grid(row=5, column=1)
+
+    def change(self, *args) -> None:
+        self.location.name = self.nameEntry.get()
+        self.location.shortName = self.shortNameEntry.get()
+        parent = self.parentVar.get()
+        if parent == "None":
+            parent = -1
+        elif parent != "":
+            parent = int(parent.split(" ")[0][1:-1])
+        else:
+            parent = -1
+            logger.warning("Invalid parent input")
+            logger.debug(f"Parent: {parent}")
+        self.location.parentID = parent
+        self.location.description = self.descriptionTextbox.get("1.0", "end")
+        if not self.db.updateLocation(self.location):
+            logger.error("Failed to update location")
+            tkMessageBox.showerror("Error", "Failed to update location")
+            return
+        self.destroyFunc()

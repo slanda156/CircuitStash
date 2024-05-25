@@ -180,6 +180,23 @@ class Database:
             logger.debug(e)
             return
 
+    def updateComponent(self, component: Component) -> bool:
+        with Session(self.engine) as session:
+            stmt = select(Components).where(Components.id == component.id)
+            result = session.exec(stmt).first()
+            if not result:
+                logger.warning(f"Component ID: \"{component.id}\" not found")
+                return False
+            result.name = component.name
+            result.description = component.description
+            result.price = component.price
+            result.imagePath = str(component.imagePath)
+            result.datasheetPath = str(component.datasheetPath)
+            session.add(result)
+            session.commit()
+            logger.info(f"Component ID: \"{component.id}\" updated")
+            return True
+
     def createLocation(self, location: Location) -> bool:
         try:
             with Session(self.engine) as session:
@@ -267,6 +284,22 @@ class Database:
             logger.error("Database error")
             logger.debug(e)
             return
+
+    def updateLocation(self, location: Location) -> bool:
+        with Session(self.engine) as session:
+            stmt = select(Locations).where(Locations.id == location.id)
+            result = session.exec(stmt).first()
+            if not result:
+                logger.warning(f"Location ID: \"{location.id}\" not found")
+                return False
+            result.parentID = location.parentID
+            result.name = location.name
+            result.shortName = location.shortName
+            result.description = location.description
+            session.add(result)
+            session.commit()
+            logger.info(f"Location ID: \"{location.id}\" updated")
+            return True
 
     def createComponentLocationMap(self, componentID: int, locationID: int, amount: int) -> bool:
         try:

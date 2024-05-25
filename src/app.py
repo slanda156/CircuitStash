@@ -1,7 +1,9 @@
+import traceback
 from logging import getLogger
 from pathlib import Path
 
 import customtkinter as ctk
+import tkinter.messagebox as tkMessageBox
 from PIL import Image, ImageOps
 
 from src import widgets
@@ -88,7 +90,7 @@ class App(ctk.CTk):
         self.addComponentButton = ctk.CTkButton(self.partsFrame, text="", image=self.icons["plus-circle"], width=28)
         self.addComponentButton.configure(command=lambda: self.createPopup("ac"))
         self.addComponentButton.grid(row=0, column=4, sticky="ne")
-        self.componentList = widgets.ComponentList(self.partsFrame, self.icons, list(self.components.values()), self.db, self.searchComponentsVar.get())
+        self.componentList = widgets.ComponentList(self.partsFrame, self.icons, list(self.components.values()), self, self.searchComponentsVar.get())
         self.componentList.grid(row=1, column=0, columnspan=5, sticky="new")
         # Create Locations tab
         self.locationsFrame = ctk.CTkFrame(self.tabs.tab("Locations"))
@@ -106,7 +108,7 @@ class App(ctk.CTk):
         self.addLocationButton = ctk.CTkButton(self.locationsFrame, text="", image=self.icons["plus-circle"], width=28)
         self.addLocationButton.configure(command=lambda: self.createPopup("al"))
         self.addLocationButton.grid(row=0, column=4, sticky="ne")
-        self.locationList = widgets.LocationList(self.locationsFrame, self.icons, list(self.locations.values()), self.db, self.searchLocationsVar.get())
+        self.locationList = widgets.LocationList(self.locationsFrame, self.icons, list(self.locations.values()), self, self.searchLocationsVar.get())
         self.locationList.grid(row=1, column=0, columnspan=5, sticky="new")
 
     def clearSelected(self, *args) -> None:
@@ -207,3 +209,9 @@ class App(ctk.CTk):
             imageResized = ImageOps.fit(image, (32, 32))
             icons[name] = ctk.CTkImage(imageResized)
         return icons
+
+    def report_callback_exception(self, *args):
+        err = traceback.format_exception(*args)
+        strErr = "\n".join(err)
+        logger.error(strErr)
+        tkMessageBox.showerror("Exception", str(err))
