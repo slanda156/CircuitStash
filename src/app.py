@@ -98,8 +98,9 @@ class App(ctk.CTk):
         self.locationsFrame.pack()
         self.locationsFrame.columnconfigure(3, minsize=600, weight=1)
         self.searchLocationsEntry = ctk.CTkEntry(self.locationsFrame, width=300)
+        self.searchLocationsEntry.bind("<Return>", self.refreshLocationList)
         self.searchLocationsEntry.grid(row=0, column=0, sticky="nw")
-        self.searchLocationsButton = ctk.CTkButton(self.locationsFrame, text="", image=self.icons["search"], width=28)
+        self.searchLocationsButton = ctk.CTkButton(self.locationsFrame, text="", image=self.icons["search"], width=28, command=self.refreshLocationList)
         self.searchLocationsButton.grid(row=0, column=1, sticky="nw")
         self.searchLocationsValues = ["Name", "Parent", "Quantity", "Total Price"]
         self.searchLocationsVar = ctk.StringVar(value=self.searchLocationsValues[0])
@@ -199,6 +200,10 @@ class App(ctk.CTk):
     def refreshComponentList(self, *args) -> None:
         self.refreshData()
         self.componentList.refresh(list(self.components.values()), self.searchComponentsVar.get() ,self.searchComponentsEntry.get())
+
+    def refreshLocationList(self, *args) -> None:
+        self.refreshData()
+        self.locationList.refresh(list(self.locations.values()), self.searchLocationsVar.get(), self.searchLocationsEntry.get())
 
     def loadIcons(self, paths: Generator[Path, None, None]) -> dict[str, ctk.CTkImage]:
         icons = {}
