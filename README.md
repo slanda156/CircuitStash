@@ -58,6 +58,8 @@ Distributed under the MIT license. See [``License``](LICENSE) for more informati
 
 I used this [https://github.com/dbader/readme-template](https://github.com/dbader/readme-template) as a template for the README
 
+The icon for the window and the .exe were made using ChatGPT
+
 ## Contributing
 
 Till the first release its not possible to contribute
