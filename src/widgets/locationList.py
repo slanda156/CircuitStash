@@ -110,7 +110,8 @@ class LocationList(ctk.CTkScrollableFrame):
 
     def filterLocations(self) -> None:
         if len(self.sortedLocations) == 0:
-            raise ValueError("No components to filter")
+            logger.warning("No locations to display")
+            return
         if self.search is None:
             return
         toRemove: list[LocationToSort] = []

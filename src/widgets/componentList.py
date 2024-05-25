@@ -117,7 +117,8 @@ class ComponentList(ctk.CTkScrollableFrame):
 
     def filterComponents(self) -> None:
         if len(self.sortedComponent) == 0:
-            raise ValueError("No components to filter")
+            logger.warning("No components to display")
+            return
         if self.search is None:
             return
         toRemove: list[ComponentToSort] = []
