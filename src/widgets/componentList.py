@@ -60,6 +60,7 @@ class ComponentWidget(ctk.CTkFrame):
         self.quantityLabel.grid(row=0, column=4, **args)
         self.descriptionTextbox = ctk.CTkTextbox(self, width=250, height=50)
         self.descriptionTextbox.insert("1.0", self.component.description)
+        self.descriptionTextbox.configure(state="disabled")
         self.descriptionTextbox.grid(row=0, column=5, **args)
         self.changeButon = ctk.CTkButton(self, text="", image=self.icons["edit-pencil"], width=28, command=self.change)
         self.changeButon.grid(row=0, column=6, **args)
