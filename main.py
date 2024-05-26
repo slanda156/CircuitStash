@@ -24,5 +24,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logger.error(format_exc())
+        logger.critical(format_exc())
         raise e
